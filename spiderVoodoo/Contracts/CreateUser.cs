@@ -1,0 +1,1 @@
+public record CreateUser(string Username, string Password);

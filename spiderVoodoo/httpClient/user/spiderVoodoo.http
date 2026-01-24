@@ -1,0 +1,11 @@
+@spiderVoodoo_HostAddress = http://localhost:5273
+
+GET {{spiderVoodoo_HostAddress}}/user
+Accept: application/json
+Content-Type: application/json
+
+{
+     "username": "testuser",
+     "password": "Test@1234"
+}
+###
