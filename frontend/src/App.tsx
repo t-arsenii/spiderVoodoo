@@ -1,9 +1,8 @@
-import './App.css'
-
 function App() {
 
   return (
     <>
+          <h1>Spider Voodoo Frontend</h1>
     </>
   )
 }
