@@ -6,8 +6,9 @@ public static class UserEndpoints
      public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder endpoints)
      {
           PasswordHasher<object> passwordHasher = new PasswordHasher<object>();
+          var userGroup = endpoints.MapGroup("/user");
 
-          endpoints.MapPost("/user", ([FromBody] CreateUser createUser) =>
+          userGroup.MapPost("/", ([FromBody] CreateUser createUser) =>
           {
                var user = new User()
                {
@@ -18,17 +19,17 @@ public static class UserEndpoints
                return Results.Ok($"User created, {user.Username}, with hashed password: {user.PasswordHash}");
           });
 
-          endpoints.MapGet("/user/{username}", ([FromRoute] string username) =>
+          userGroup.MapGet("/{username}", ([FromRoute] string username) =>
           {
                return Results.Ok($"User found: {username}");
 
           });
-          endpoints.MapPut("/user/{username}", ([FromRoute] string username) =>
+          userGroup.MapPut("/{username}", ([FromRoute] string username) =>
           {
                return Results.Ok($"User updated: {username}");
 
           });
-          endpoints.MapDelete("/user/{username}", ([FromRoute] string username) =>
+          userGroup.MapDelete("/{username}", ([FromRoute] string username) =>
           {
                return Results.Ok($"User deleted: {username}");
           });
