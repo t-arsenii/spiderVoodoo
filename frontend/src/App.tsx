@@ -1,9 +1,11 @@
-function App() {
+import Layout from './Layout'
+import LoginForm from './Login'
 
+function App() {
   return (
-    <>
-          <h1>Spider Voodoo Frontend</h1>
-    </>
+    <Layout>
+      <LoginForm />
+    </Layout>
   )
 }
 
