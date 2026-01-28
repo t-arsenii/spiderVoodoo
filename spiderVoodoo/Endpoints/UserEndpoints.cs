@@ -1,38 +1,74 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 public static class UserEndpoints
 {
-     public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder endpoints)
+     public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
      {
-          PasswordHasher<object> passwordHasher = new PasswordHasher<object>();
-          var userGroup = endpoints.MapGroup("/user");
-
-          userGroup.MapPost("/", ([FromBody] CreateUser createUser) =>
+          var endpoints = app.MapGroup("/user");
+          endpoints.MapPost("/", CreateUser);
+          endpoints.MapGet("/{id}", GetUserById);
+          endpoints.MapPut("/{username}", UpdateUser);
+          endpoints.MapDelete("/{username}", DeleteUser);
+          return app;
+     }
+     static Results<Ok<User>, NotFound> GetUserById(string id)
+     {
+          var user = new User()
           {
-               var user = new User()
-               {
-                    Username = createUser.Username,
-                    PasswordHash = passwordHasher.HashPassword(null!, createUser.Password)
-               };
+               Username = "exampleUser",
+               PasswordHash = "hashedPassword"
+          };
 
-               return Results.Ok($"User created, {user.Username}, with hashed password: {user.PasswordHash}");
-          });
-
-          userGroup.MapGet("/{username}", ([FromRoute] string username) =>
+          if (user != null)
           {
-               return Results.Ok($"User found: {username}");
-
-          });
-          userGroup.MapPut("/{username}", ([FromRoute] string username) =>
+               return TypedResults.Ok(user);
+          }
+          else
           {
-               return Results.Ok($"User updated: {username}");
-
-          });
-          userGroup.MapDelete("/{username}", ([FromRoute] string username) =>
+               return TypedResults.NotFound();
+          }
+     }
+     static Results<Created<User>, BadRequest> CreateUser(CreateUser createUser, PasswordHasher<object> passwordHasher)
+     {
+          if (string.IsNullOrEmpty(createUser.Username) || string.IsNullOrEmpty(createUser.Password))
           {
-               return Results.Ok($"User deleted: {username}");
-          });
-          return endpoints;
+               return TypedResults.BadRequest();
+          }
+
+          var user = new User()
+          {
+               Username = createUser.Username,
+               PasswordHash = passwordHasher.HashPassword(null!, createUser.Password)
+          };
+
+          return TypedResults.Created($"/user/{user.Username}", user);
+     }
+     static Results<Ok<string>, NotFound> DeleteUser(string username)
+     {
+          bool userExists = true;
+
+          if (userExists)
+          {
+               return TypedResults.Ok($"User deleted: {username}");
+          }
+          else
+          {
+               return TypedResults.NotFound();
+          }
+     }
+     static Results<Ok<string>, NotFound> UpdateUser(string username)
+     {
+          bool userExists = true;
+
+          if (userExists)
+          {
+               return TypedResults.Ok($"User updated: {username}");
+          }
+          else
+          {
+               return TypedResults.NotFound();
+          }
      }
 }
