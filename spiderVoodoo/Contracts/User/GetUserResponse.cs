@@ -1,0 +1,1 @@
+public record GetUserResponse(string Id, string? Username, string? Email);

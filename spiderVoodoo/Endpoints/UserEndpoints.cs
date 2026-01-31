@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 
 public static class UserEndpoints
 {
@@ -13,37 +12,30 @@ public static class UserEndpoints
           endpoints.MapDelete("/{username}", DeleteUser);
           return app;
      }
-     static Results<Ok<User>, NotFound> GetUserById(string id)
+     static async Task<Results<Ok<GetUserResponse>, NotFound>> GetUserById(string id, UserManager<User> _userManager)
      {
-          var user = new User()
-          {
-               Username = "exampleUser",
-               PasswordHash = "hashedPassword"
-          };
-
-          if (user != null)
-          {
-               return TypedResults.Ok(user);
-          }
-          else
-          {
+          var user = await _userManager.FindByIdAsync(id);
+          if (user is null)
                return TypedResults.NotFound();
-          }
+          var getUserResponse = new GetUserResponse(user.Id, user.UserName, user.Email);
+          return TypedResults.Ok(getUserResponse);
      }
-     static Results<Created<User>, BadRequest> CreateUser(CreateUser createUser, PasswordHasher<object> passwordHasher)
+     static Results<Created<GetUserResponse>, BadRequest<IEnumerable<IdentityError>>, BadRequest> CreateUser(CreateUserRequest createUser, UserManager<User> _userManager, ApplicationDbContext dbContext)
      {
           if (string.IsNullOrEmpty(createUser.Username) || string.IsNullOrEmpty(createUser.Password))
           {
                return TypedResults.BadRequest();
           }
-
-          var user = new User()
+          var user = new User
           {
-               Username = createUser.Username,
-               PasswordHash = passwordHasher.HashPassword(null!, createUser.Password)
+               UserName = createUser.Username
           };
+          var result = _userManager.CreateAsync(user, createUser.Password).GetAwaiter().GetResult();
+          if (!result.Succeeded)
+               return TypedResults.BadRequest(result.Errors);
 
-          return TypedResults.Created($"/user/{user.Username}", user);
+          // dbContext.SaveChanges();
+          return TypedResults.Created($"/user/{user.Id}", new GetUserResponse(user.Id, user.UserName, user.Email));
      }
      static Results<Ok<string>, NotFound> DeleteUser(string username)
      {

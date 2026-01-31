@@ -1,5 +1,4 @@
 @spiderVoodoo_HostAddress = http://localhost:5273
-
 POST {{spiderVoodoo_HostAddress}}/user
 Accept: application/json
 Content-Type: application/json
@@ -9,7 +8,6 @@ Content-Type: application/json
      "password": "Test@1234"
 }
 ###
-
-GET {{spiderVoodoo_HostAddress}}/user/testuser
+@user_id = 
+GET {{spiderVoodoo_HostAddress}}/user/{{user_id}}
 Accept: application/json
-###
