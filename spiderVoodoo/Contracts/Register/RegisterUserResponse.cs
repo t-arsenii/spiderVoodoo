@@ -1,0 +1,1 @@
+public record RegisterUserResponse(string Id, string Username, string Email);

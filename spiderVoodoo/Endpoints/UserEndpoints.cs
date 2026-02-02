@@ -5,11 +5,12 @@ public static class UserEndpoints
 {
      public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
      {
-          var endpoints = app.MapGroup("/user");
+          var endpoints = app.MapGroup("/users");
+          endpoints.RequireAuthorization();
           endpoints.MapPost("/", CreateUser);
           endpoints.MapGet("/{id}", GetUserById);
-          endpoints.MapPut("/{username}", UpdateUser);
-          endpoints.MapDelete("/{username}", DeleteUser);
+          endpoints.MapPut("/{id}", UpdateUser);
+          endpoints.MapDelete("/{id}", DeleteUser);
           return app;
      }
      static async Task<Results<Ok<GetUserResponse>, NotFound>> GetUserById(string id, UserManager<User> _userManager)
@@ -20,43 +21,43 @@ public static class UserEndpoints
           var getUserResponse = new GetUserResponse(user.Id, user.UserName, user.Email);
           return TypedResults.Ok(getUserResponse);
      }
-     static Results<Created<GetUserResponse>, BadRequest<IEnumerable<IdentityError>>, BadRequest> CreateUser(CreateUserRequest createUser, UserManager<User> _userManager, ApplicationDbContext dbContext)
+     static async Task<Results<Created<CreateUserResponse>, BadRequest<IEnumerable<IdentityError>>, BadRequest>> CreateUser(CreateUserRequest createUser, UserManager<User> _userManager, ApplicationDbContext dbContext)
      {
-          if (string.IsNullOrEmpty(createUser.Username) || string.IsNullOrEmpty(createUser.Password))
+          if (string.IsNullOrEmpty(createUser.Username) || string.IsNullOrEmpty(createUser.Password) || string.IsNullOrEmpty(createUser.Email))
           {
                return TypedResults.BadRequest();
           }
           var user = new User
           {
-               UserName = createUser.Username
+               UserName = createUser.Username,
+               Email = createUser.Email
           };
-          var result = _userManager.CreateAsync(user, createUser.Password).GetAwaiter().GetResult();
+          var result = await _userManager.CreateAsync(user, createUser.Password);
           if (!result.Succeeded)
                return TypedResults.BadRequest(result.Errors);
 
-          // dbContext.SaveChanges();
-          return TypedResults.Created($"/user/{user.Id}", new GetUserResponse(user.Id, user.UserName, user.Email));
+          return TypedResults.Created($"/users/{user.Id}", new CreateUserResponse(user.Id, user.UserName, user.Email));
      }
-     static Results<Ok<string>, NotFound> DeleteUser(string username)
+     static Results<Ok<string>, NotFound> DeleteUser(string id)
      {
           bool userExists = true;
 
           if (userExists)
           {
-               return TypedResults.Ok($"User deleted: {username}");
+               return TypedResults.Ok($"User deleted: {id}");
           }
           else
           {
                return TypedResults.NotFound();
           }
      }
-     static Results<Ok<string>, NotFound> UpdateUser(string username)
+     static Results<Ok<string>, NotFound> UpdateUser(string id)
      {
           bool userExists = true;
 
           if (userExists)
           {
-               return TypedResults.Ok($"User updated: {username}");
+               return TypedResults.Ok($"User updated: {id}");
           }
           else
           {

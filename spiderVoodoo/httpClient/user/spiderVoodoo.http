@@ -1,13 +1,28 @@
 @spiderVoodoo_HostAddress = http://localhost:5273
-POST {{spiderVoodoo_HostAddress}}/user
+# @name login
+POST {{spiderVoodoo_HostAddress}}/login
 Accept: application/json
 Content-Type: application/json
 
 {
-     "username": "testuser",
+     "email": "testuser@example.com",
      "password": "Test@1234"
 }
 ###
-@user_id = 
-GET {{spiderVoodoo_HostAddress}}/user/{{user_id}}
+@spiderVoodoo_AccessToken = {{login.response.body.token}} 
+###
+POST {{spiderVoodoo_HostAddress}}/users
 Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{spiderVoodoo_AccessToken}}
+
+{
+     "username": "testuser",
+     "password": "Test@1234",
+     "email": "testuser@example.com"
+}
+###
+@user_id = 
+GET {{spiderVoodoo_HostAddress}}/users/{{user_id}}
+Accept: application/json
+###
