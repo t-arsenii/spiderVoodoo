@@ -12,7 +12,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import Typography from '@mui/material/Typography'
 import Alert from '@mui/material/Alert'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
-import { loginUser, selectUserLoading, selectUserError, clearError } from '../../store/userSlice'
+import { loginUser, selectUserLoading, selectUserError, clearError, setError } from '../../store/userSlice'
 import { ROUTES } from '../../routes/routeConstants'
 import AuthLayout from '../../layouts/AuthLayout'
 
@@ -42,7 +42,6 @@ export default function LoginPage() {
     const result = await dispatch(loginUser({ email, password }))
 
     if (loginUser.fulfilled.match(result)) {
-      // Login successful, navigation will be handled by AuthOnlyRoute
       navigate(ROUTES.DASHBOARD)
     }
   }

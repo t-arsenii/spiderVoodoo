@@ -1,5 +1,10 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
-import userService, { type GetUserResponse, type LoginRequest, type RegisterUserRequest } from '../services/userService';
+import userService, {
+     ApiError,
+     type GetUserResponse,
+     type LoginRequest,
+     type RegisterUserRequest,
+} from '../services/userService';
 
 export interface UserState {
      user: GetUserResponse | null;
@@ -13,7 +18,7 @@ const initialState: UserState = {
      user: null,
      token: null,
      isAuthenticated: false,
-     loading: false,
+     loading: true,
      error: null,
 };
 
@@ -28,8 +33,14 @@ export const loginUser = createAsyncThunk(
                userService.storeToken(response.token);
                return response;
           } catch (error) {
+               if (error instanceof ApiError && error.status === 401) {
+                    return rejectWithValue('Invalid email or password.');
+               }
+
                return rejectWithValue(
-                    error instanceof Error ? error.message : 'Login failed'
+                    error instanceof Error
+                         ? error.message
+                         : 'Failed to sign in. Please check your credentials and try again.'
                );
           }
      }
@@ -66,8 +77,8 @@ export const restoreSession = createAsyncThunk(
                if (!token) {
                     return rejectWithValue('No stored token');
                }
-               const user = await userService.getCurrentUser(token);
-               return { user, token };
+               // const user = await userService.getCurrentUser(token);
+               return { token };
           } catch (error) {
                userService.clearToken();
                return rejectWithValue(
@@ -103,21 +114,15 @@ const userSlice = createSlice({
      name: 'user',
      initialState,
      reducers: {
-          /**
-           * Clear error message
-           */
           clearError: (state) => {
                state.error = null;
           },
-          /**
-           * Set user directly (useful for updates)
-           */
+          setError: (state, action: PayloadAction<string>) => {
+               state.error = action.payload;
+          },
           setUser: (state, action: PayloadAction<GetUserResponse | null>) => {
                state.user = action.payload;
           },
-          /**
-           * Set authentication token
-           */
           setToken: (state, action: PayloadAction<string>) => {
                state.token = action.payload;
                state.isAuthenticated = true;
@@ -165,7 +170,7 @@ const userSlice = createSlice({
                })
                .addCase(restoreSession.fulfilled, (state, action) => {
                     state.loading = false;
-                    state.user = action.payload.user;
+                    // state.user = action.payload.user;
                     state.token = action.payload.token;
                     state.isAuthenticated = true;
                     state.error = null;
@@ -200,9 +205,8 @@ const userSlice = createSlice({
      },
 });
 
-export const { clearError, setUser, setToken } = userSlice.actions;
+export const { clearError, setUser, setToken, setError } = userSlice.actions;
 
-// Selectors
 export const selectUser = (state: { user: UserState }) => state.user.user;
 export const selectToken = (state: { user: UserState }) => state.user.token;
 export const selectIsAuthenticated = (state: { user: UserState }) =>
